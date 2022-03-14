@@ -1,20 +1,20 @@
 require "./user_builder"
 
 RSpec.describe UserBuilder do
+  before :each do
+    @dummy_client = double("api client", {
+      create: "Done",
+      get_token: "90809080"
+    })
+
+    @params = {
+      api_client: @dummy_client,
+      name: "Apollo Creed",
+      shoe_size: 11
+    }
+  end
+
   describe "instantiation" do
-    before :each do
-      @dummy_client = double("api client", {
-        create: "Done",
-        get_token: "90809080"
-      })
-
-      @params = {
-        api_client: @dummy_client,
-        name: "Apollo Creed",
-        shoe_size: 11
-      }
-    end
-
     it "should be successful when all required arguements are supplied" do
       expect{
         UserBuilder.new(@params)
@@ -23,7 +23,8 @@ RSpec.describe UserBuilder do
 
     it "should raise and error when the :api_client is not specified" do
       expect{
-        UserBuilder.new(@params.except(:api_client))
+        @params.delete(:api_client)
+        UserBuilder.new(@delete)
       }.to raise_error ArgumentError
     end
 
@@ -46,15 +47,18 @@ RSpec.describe UserBuilder do
     end
 
     it "should default the name to 'None' when not supplied" do
-      expect(UserBuilder.new(@params.except(:name))).to eq "None"
+      @params.delete(:name)
+      expect(UserBuilder.new(@params).name).to eq "None"
     end
 
     it "should default the shoe size to 10 when not supplied" do
-      expect(UserBuilder.new(@params.except(:shoe_size))).to eq 10
+      @params.delete(:shoe_size)
+      expect(UserBuilder.new(@params).shoe_size).to eq 10
     end
 
     it "should default the south_paw flag to false when not supplied" do
-      expect(UserBuilder.new(@params.except(:south_paw))).to be_falsey
+      @params.delete(:south_paw)
+      expect(UserBuilder.new(@params).south_paw).to be_falsey
     end
   end
 
@@ -65,14 +69,23 @@ RSpec.describe UserBuilder do
 
     describe "#build" do
       it "should call the API client" do
-        expect(@dummy_client).to_receive(:create).and_return("Done")
+        expect(@dummy_client).to receive(:create).and_return("Done")
         @builder.build
       end
 
       describe "API client call" do
-        it "should have Content-Type appropriately set" do
-          expect(@dummy_client).to_receive(:create) do |headers, _body|
+        it "should set headers appropriately" do
+          expect(@dummy_client).to receive(:create) do |headers, _body|
             expect(headers["Content-Type"]).to eq "application/json"
+            expect(headers["Authorization"]).to eq "Bearer 90809080"
+          end.and_return("Done")
+          @builder.build
+        end
+
+        it "should set the body appropriately" do
+          expect(@dummy_client).to receive(:create) do |_headers, body|
+            expect(body[:name]).to eq "apollo creed"
+            expect(body[:shoe_size]).to eq 11.5
           end.and_return("Done")
           @builder.build
         end
