@@ -69,7 +69,7 @@ RSpec.describe UserBuilder do
 
     describe "#build" do
       it "should call the API client" do
-        expect(@dummy_client).to receive(:create).and_return("Done")
+        expect(@dummy_client).to receive(:create)
         @builder.build
       end
 
@@ -78,7 +78,7 @@ RSpec.describe UserBuilder do
           expect(@dummy_client).to receive(:create) do |headers, _body|
             expect(headers["Content-Type"]).to eq "application/json"
             expect(headers["Authorization"]).to eq "Bearer 90809080"
-          end.and_return("Done")
+          end
           @builder.build
         end
 
@@ -86,7 +86,7 @@ RSpec.describe UserBuilder do
           expect(@dummy_client).to receive(:create) do |_headers, body|
             expect(body[:name]).to eq "apollo creed"
             expect(body[:shoe_size]).to eq 11.5
-          end.and_return("Done")
+          end
           @builder.build
         end
       end
